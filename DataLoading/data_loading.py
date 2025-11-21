@@ -1,38 +1,36 @@
 import os
 import sys
 from datasets import load_dataset, DatasetDict
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from transformers import AutoTokenizer
 from huggingface_hub import login
-
-
+from dotenv import load_dotenv
+load_dotenv()
+# --- Configuration ---
+# /app/data is a standard convention for mounting volumes in Docker
 DATASET_ID = os.environ.get("DATASET_ID", "jason23322/high-accuracy-email-classifier")
 MODEL_CHECKPOINT = os.environ.get("MODEL_CHECKPOINT", "bert-base-uncased")
 MAX_LENGTH = int(os.environ.get("MAX_LENGTH", 256))
+OUTPUT_VOLUME_PATH = os.environ.get("PROCESSED_DATA_PATH", "../output_data")
 
-# --- Data Loading and Preprocessing Class ---
 class EmailDatasetPreparer:
     
     def __init__(self, dataset_id: str, model_checkpoint: str, max_length: int):
         self.dataset_id = dataset_id
-       
         self.tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
         self.max_length = max_length
-        self.num_labels = 6
-        print(f"Initialized preparer for dataset: {self.dataset_id} (Checkpoint: {model_checkpoint}, Max Length: {max_length})")
+        print(f"Initialized preparer for dataset: {self.dataset_id}")
 
-    def load_and_prepare_data(self) -> tuple[DatasetDict, int, AutoTokenizer]:
-       
+    def load_and_prepare_data(self) -> DatasetDict:
+        print("Downloading dataset...")
         try:
+            # split=['train', 'test'] returns a list, we convert to DatasetDict
             raw_datasets = load_dataset(self.dataset_id, split=['train', 'test'])
-            
             dataset_dict = DatasetDict({
                 'train': raw_datasets[0],
                 'test': raw_datasets[1]
             })
-
         except Exception as e:
             print(f"ERROR: Error loading dataset: {e}", file=sys.stderr)
-            print("Action required: Check your DATASET_ID, HF_API_TOKEN, and access permissions.", file=sys.stderr)
             sys.exit(1)
 
         def tokenize_function(examples):
@@ -43,6 +41,7 @@ class EmailDatasetPreparer:
                 max_length=self.max_length
             )
 
+        print("Tokenizing data...")
         tokenized_datasets = dataset_dict.map(
             tokenize_function,
             batched=True,
@@ -50,33 +49,30 @@ class EmailDatasetPreparer:
         )
         
         tokenized_datasets = tokenized_datasets.rename_column("category_id", "labels")
+        return tokenized_datasets
 
-        print("Data tokenization complete.")
-        print(f"Training set size: {len(tokenized_datasets['train'])}")
-        print(f"Test set size: {len(tokenized_datasets['test'])}")
+    def save_to_volume(self, dataset: DatasetDict, output_path: str):
+        """Saves the dataset AND tokenizer to the shared volume"""
+        print(f"Saving processed data to volume: {output_path}")
         
-        return tokenized_datasets, self.num_labels, self.tokenizer
-
+        # 1. Save the dataset (Arrow format)
+        dataset.save_to_disk(output_path)
+        
+        # 2. Save the tokenizer (CRITICAL: ensures training uses exact same vocab)
+        self.tokenizer.save_pretrained(output_path)
+        
+        print("✅ Save complete. Ready for training container.")
 
 if __name__ == '__main__':
     hf_token = os.environ.get("HF_API_TOKEN")
+    print(hf_token)
     if hf_token:
-        print("Found HF_API_TOKEN in environment. Logging in to Hugging Face Hub...")
         login(token=hf_token)
-    else:
-        print("CRITICAL WARNING: HF_API_TOKEN not found. Using anonymous access.", file=sys.stderr)
         
     preparer = EmailDatasetPreparer(DATASET_ID, MODEL_CHECKPOINT, MAX_LENGTH)
     
-    tokenized_data, num_labels, tokenizer = preparer.load_and_prepare_data()
+    # 1. Process
+    tokenized_data = preparer.load_and_prepare_data()
 
-    if tokenized_data:
-        print("\n--- Example Data Sample ---")
-        sample = tokenized_data['train'][0]
-        print(f"Features: {sample}")
-        print(f"Input IDs (tokenized text snippet): {sample['input_ids'][:10]}...")
-        print(f"Attention Mask snippet: {sample['attention_mask'][:10]}...")
-        print(f"Label (category ID): {sample['labels']}")
-        decoded_text = tokenizer.decode(sample['input_ids'], skip_special_tokens=True)
-        print(f"Decoded Text: {decoded_text}")
-        print("-" * 30)
+    # 2. Save to the shared Volume path
+    preparer.save_to_volume(tokenized_data, OUTPUT_VOLUME_PATH)
