@@ -9,3 +9,6 @@ python-dotenv # Helpful for local testing of environment variables (HF_API_TOKEN
 huggingface_hub # Required for logging in via the API token
 
 onnxruntime
+evaluate
+scikit-learn
+accelerate

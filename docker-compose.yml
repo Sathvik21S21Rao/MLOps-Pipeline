@@ -9,7 +9,7 @@ services:
     environment:
       # Define where to save data inside the container
       - PROCESSED_DATA_PATH=/app/data/output_folder
-      - HF_API_TOKEN=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
+      - HF_API_TOKEN=${HF_API_TOKEN}
     volumes:
       - ml_pipeline_volume:/app/data
 
@@ -21,6 +21,7 @@ services:
     environment:
       - PROCESSED_DATA_PATH=/app/data/output_folder
       - MODEL_OUTPUT_DIR=/app/results
+      - HF_API_TOKEN=${HF_API_TOKEN}
     volumes:
       - ml_pipeline_volume:/app/data  # Read data from shared volume
       - ./results:/app/results        # Save trained model to host
