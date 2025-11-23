@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trainer-bert-bert-uncased
+  labels:
+    app: trainer-bert-bert-uncased
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trainer-bert-bert-uncased
+  template:
+    metadata:
+      labels:
+        app: trainer-bert-bert-uncased
+    spec:
+      containers:
+        - name: trainer
+          image: Nihonium/bert-bert-uncased-trainer:latest
+          envFrom:
+            - configMapRef:
+                name: "bert-bert-uncased-env"
+            - secretRef:
+                name: hf-token
+          ports:
+            - containerPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: trainer-bert-bert-uncased-svc
+spec:
+  selector:
+    app: trainer-bert-bert-uncased
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP

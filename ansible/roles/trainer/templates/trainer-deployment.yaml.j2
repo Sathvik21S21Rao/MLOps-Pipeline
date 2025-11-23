@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trainer-{{ trainer_name }}
+spec:
+  replicas: {{ replicas }}
+  selector:
+    matchLabels:
+      app: trainer-{{ trainer_name }}
+  template:
+    metadata:
+      labels:
+        app: trainer-{{ trainer_name }}
+    spec:
+      containers:
+        - name: trainer
+          image: {{ trainer_image }}
+          env:
+            - name: PROCESSED_DATA_PATH
+              value: "{{ processed_data_path }}"
+            - name: MODEL_CHECKPOINT
+              value: "{{ model_checkpoint }}"
+            - name: MODEL_OUTPUT_DIR
+              value: "{{ model_output_dir }}"
+            - name: LOGSTASH_HOST
+              value: "logstash"
+            - name: LOGSTASH_PORT
+              value: "5000"
+          resources:
+            limits:
+              cpu: "1"
+              memory: "2Gi"

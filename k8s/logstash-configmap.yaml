@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-pipeline
+  labels:
+    app: logstash
+data:
+  logstash.conf: |
+    input {
+      tcp {
+        port => 5000
+        codec => json
+      }
+    }
+
+    filter {
+      if [log_type] == "training_metrics" {
+        mutate { add_field => { "pipeline" => "trainer_metrics" } }
+      }
+    }
+
+    output {
+      stdout { codec => rubydebug }
+      # Change the ES host if required by your cluster
+      elasticsearch { hosts => ["http://elasticsearch:9200"] index => "trainer-metrics-%{+YYYY.MM.dd}" }
+    }

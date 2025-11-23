@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trainer-{{ model.name }}
+  labels:
+    app: trainer-{{ model.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trainer-{{ model.name }}
+  template:
+    metadata:
+      labels:
+        app: trainer-{{ model.name }}
+    spec:
+      containers:
+        - name: trainer
+          image: Nihonium/{{ model.name }}-trainer:latest
+          envFrom:
+            - configMapRef:
+                name: "{{ model.name }}-env"
+            - secretRef:
+                name: hf-token
+          env:
+            - name: PROCESSED_DATA_PATH
+              value: "/data/output_folder"
+          volumeMounts:
+            - name: processed-data
+              mountPath: /data
+          ports:
+            - containerPort: 8080
+      volumes:
+        - name: processed-data
+          persistentVolumeClaim:
+            claimName: processed-data-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: trainer-{{ model.name }}-svc
+spec:
+  selector:
+    app: trainer-{{ model.name }}
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP

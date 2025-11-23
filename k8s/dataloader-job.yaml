@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dataloader-job
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      containers:
+      - name: dataloader
+        image: Nihonium/dataloader:latest
+        command: ["python", "DataLoading/data_loading.py"]
+        env:
+          - name: PROCESSED_DATA_PATH
+            value: "/data/output_folder"
+          - name: HF_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: hf-token
+                key: HF_API_TOKEN
+        volumeMounts:
+          - name: processed-data
+            mountPath: /data
+      restartPolicy: Never
+      volumes:
+        - name: processed-data
+          persistentVolumeClaim:
+            claimName: processed-data-pvc

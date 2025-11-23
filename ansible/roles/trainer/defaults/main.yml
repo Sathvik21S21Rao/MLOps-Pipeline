@@ -1,0 +1,8 @@
+---
+# Defaults for trainer role
+trainer_name: trainer
+trainer_image: Nihonium/{{ model.name }}-trainer:latest
+processed_data_path: /data/processed
+model_checkpoint: bert-base-uncased
+model_output_dir: /data/models
+replicas: 1

@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trainer-{{MODEL_NAME}}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trainer-{{MODEL_NAME}}
+  template:
+    metadata:
+      labels:
+        app: trainer-{{MODEL_NAME}}
+    spec:
+      containers:
+        - name: trainer
+          image: Nihonium/{{MODEL_NAME}}-trainer:latest
+          env:
+            - name: PROCESSED_DATA_PATH
+              value: "{{PROCESSED_DATA_PATH}}"
+            - name: MODEL_CHECKPOINT
+              value: "{{MODEL_CHECKPOINT}}"
+            - name: MODEL_OUTPUT_DIR
+              value: "{{MODEL_OUTPUT_DIR}}"
+            - name: LOGSTASH_HOST
+              value: "logstash"
+            - name: LOGSTASH_PORT
+              value: "5000"
+          ports:
+            - containerPort: 8080
+
+# Notes: Replace placeholders using your CI or `envsubst` before applying.
