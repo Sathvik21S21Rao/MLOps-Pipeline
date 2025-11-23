@@ -23,7 +23,6 @@ class EmailDatasetPreparer:
     def load_and_prepare_data(self) -> DatasetDict:
         print("Downloading dataset...")
         try:
-            # split=['train', 'test'] returns a list, we convert to DatasetDict
             raw_datasets = load_dataset(self.dataset_id, split=['train', 'test'])
             dataset_dict = DatasetDict({
                 'train': raw_datasets[0],
@@ -55,13 +54,11 @@ class EmailDatasetPreparer:
         """Saves the dataset AND tokenizer to the shared volume"""
         print(f"Saving processed data to volume: {output_path}")
         
-        # 1. Save the dataset (Arrow format)
         dataset.save_to_disk(output_path)
         
-        # 2. Save the tokenizer (CRITICAL: ensures training uses exact same vocab)
         self.tokenizer.save_pretrained(output_path)
         
-        print("✅ Save complete. Ready for training container.")
+        print(" Save complete. Ready for training container.")
 
 if __name__ == '__main__':
     hf_token = os.environ.get("HF_API_TOKEN")
