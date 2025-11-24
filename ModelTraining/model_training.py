@@ -4,7 +4,8 @@ import numpy as np
 from datetime import datetime
 from datasets import load_from_disk
 import joblib
-
+import socket
+import os
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import SGDClassifier, LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
@@ -16,7 +17,8 @@ DATA_PATH = os.environ.get("PROCESSED_DATA_PATH", "/app/data")
 OUTPUT_DIR = os.environ.get("MODEL_OUTPUT_DIR", "/app/model_output")
 MODEL_NAME = os.environ.get("MODEL_NAME", "tfidf-sklearn")
 
-
+LOGSTASH_HOST = os.environ.get("LOGSTASH_HOST", "logstash")
+LOGSTASH_PORT = int(os.environ.get("LOGSTASH_PORT", "5004"))
 def compute_metrics(y_true, y_pred):
     acc = accuracy_score(y_true, y_pred)
     f1 = f1_score(y_true, y_pred, average="weighted")
@@ -32,8 +34,26 @@ def emit_logstash_metrics(metrics: dict, model_name: str, data_path: str, output
         "output_dir": output_dir,
         "metrics": metrics,
     }
-    print(json.dumps(record, ensure_ascii=False))
+    send_to_logstash(record)
 
+
+def send_to_logstash(data: dict):
+    """Send a JSON event to Logstash over TCP."""
+    try:
+        # Add log_type so Logstash filter knows how to route it
+        data["log_type"] = "training_metrics"
+        
+        message = json.dumps(data) + "\n"
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((LOGSTASH_HOST, LOGSTASH_PORT))
+        sock.sendall(message.encode("utf-8"))
+        sock.close()
+
+        print(f"Pushed to Logstash: {data}")
+
+    except Exception as e:
+        print(f"Failed to send log to Logstash: {e}")
 
 class EmailModelTrainer:
     def __init__(self, output_dir=OUTPUT_DIR, max_features=20000, classifier_name=None):

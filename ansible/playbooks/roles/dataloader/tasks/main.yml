@@ -1,11 +1,19 @@
 ---
+
 - name: Ensure k8s namespace exists
   kubernetes.core.k8s:
     api_version: v1
     kind: Namespace
     name: "{{ k8s_namespace }}"
     state: present
-
+- name: Delete previous dataloader Job (if exists)
+  kubernetes.core.k8s:
+    api_version: batch/v1
+    kind: Job
+    name: "dataloader-{{ inventory_hostname | replace('.', '-') }}"
+    namespace: "{{ k8s_namespace }}"
+    state: absent
+  ignore_errors: true
 - name: Create HF API token secret from vault
   kubernetes.core.k8s:
     state: present

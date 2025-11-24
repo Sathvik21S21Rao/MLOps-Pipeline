@@ -6,8 +6,8 @@ models:
   - sgd
   - logistic
   - random_forest
-modeltrainer_image: "nihonium/modeltrainer:latest"
-dataloader_image: "nihonium/dataloader:latest"
+modeltrainer_image: "shreyankgopal403/modeltrainer:latest"
+dataloader_image: "shreyankgopal403/dataloader:latest"
 logstash_image: "docker.elastic.co/logstash/logstash:8.8.1"
 elasticsearch_image: "docker.elastic.co/elasticsearch/elasticsearch:8.8.1"
 kibana_image: "docker.elastic.co/kibana/kibana:8.8.1"

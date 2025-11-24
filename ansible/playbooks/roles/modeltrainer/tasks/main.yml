@@ -5,6 +5,29 @@
     kind: Namespace
     name: "{{ k8s_namespace }}"
     state: present
+- name: Delete previous modeltrainer Job (if exists)
+  kubernetes.core.k8s:
+    api_version: batch/v1
+    kind: Job
+    name: "modeltrainer-{{ inventory_hostname | replace('.', '-') }}"
+    namespace: "{{ k8s_namespace }}"
+    state: absent
+# ADD THIS BLOCK — PVC CREATION
+- name: Ensure model-output-pvc exists
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: model-output-pvc
+        namespace: "{{ k8s_namespace }}"
+      spec:
+        accessModes:
+          - ReadWriteOnce     # OK for Minikube
+        resources:
+          requests:
+            storage: 5Gi
 
 - name: Apply modeltrainer deployment for model {{ model_name }}
   kubernetes.core.k8s:

@@ -21,7 +21,7 @@ spec:
               mountPath: /usr/share/logstash/pipeline/logstash.conf
               subPath: logstash.conf
           ports:
-            - containerPort: 5044
+            - containerPort: 5004
       volumes:
         - name: pipeline-config
           configMap:
@@ -37,5 +37,5 @@ spec:
   selector:
     app: logstash
   ports:
-    - port: 5044
-      targetPort: 5044
+    - port: 5004
+      targetPort: 5004
