@@ -1,0 +1,30 @@
+---
+- name: Ensure k8s namespace exists
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: "{{ k8s_namespace }}"
+    state: present
+
+- name: Create HF API token secret from vault
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: hf-api-token-secret
+        namespace: "{{ k8s_namespace }}"
+      type: Opaque
+      stringData:
+        HF_API_TOKEN: "{{ hf_api_token }}"
+
+- name: Ensure data PVC exists
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'data-pvc.yaml.j2') }}"
+
+- name: Apply dataloader job
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'dataloader-job.yaml.j2') }}"

@@ -1,0 +1,53 @@
+{% set safe_model = (model_name | default('model') | string).lower().replace('_','-') %}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: modeltrainer-{{ safe_model }}
+  namespace: {{ k8s_namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: modeltrainer
+      model: "{{ safe_model }}"
+  template:
+    metadata:
+      labels:
+        app: modeltrainer
+        model: "{{ safe_model }}"
+    spec:
+      containers:
+        - name: modeltrainer
+          image: {{ modeltrainer_image }}
+          env:
+            - name: MODEL_TYPE
+              value: "{{ model_name }}"
+            - name: PROCESSED_DATA_PATH
+              value: "/app/data"
+            - name: HF_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-api-token-secret
+                  key: HF_API_TOKEN
+            - name: LOGSTASH_HOST
+              value: "logstash.{{ k8s_namespace }}.svc.cluster.local:5044"
+            - name: MODEL_OUTPUT_DIR
+              value: "/app/model_{{ safe_model }}"
+          volumeMounts:
+            - name: data-volume
+              mountPath: /app/data
+            - name: model-output-volume
+              mountPath: /app/model_{{ safe_model }}
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: data-pvc
+        - name: model-output-volume
+          persistentVolumeClaim:
+            claimName: model-output-pvc

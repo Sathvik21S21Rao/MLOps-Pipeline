@@ -1,0 +1,27 @@
+---
+- name: Ensure k8s namespace exists
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: "{{ k8s_namespace }}"
+    state: present
+
+- name: Deploy Elasticsearch
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'elasticsearch-deployment.yaml.j2') }}"
+
+- name: Deploy Logstash config
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'logstash-configmap.yaml.j2') }}"
+
+- name: Deploy Logstash
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'logstash-deployment.yaml.j2') }}"
+
+- name: Deploy Kibana
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'kibana-deployment.yaml.j2') }}"

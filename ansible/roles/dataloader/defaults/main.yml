@@ -1,6 +1,0 @@
----
-# Defaults for dataloader role
-dataloader_name: dataloader
-dataloader_image: Nihonium/{{ model.name }}-dataloader:latest
-output_path: /data/processed
-replicas: 1

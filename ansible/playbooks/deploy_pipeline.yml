@@ -1,0 +1,30 @@
+---
+-
+  name: Deploy ML data-loading and training pipeline to Kubernetes
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  vars_files:
+    - ../group_vars/all/vault.yml
+
+  tasks:
+    - name: Deploy ELK stack (Elasticsearch, Logstash, Kibana)
+      include_role:
+        name: elk
+
+    - name: Run dataloader job (uses HF token from vault)
+      include_role:
+        name: dataloader
+
+    - name: Deploy modeltrainer deployments for each model type
+      include_role:
+        name: modeltrainer
+      loop: "{{ models }}"
+      loop_control:
+        loop_var: model_item
+      vars:
+        model_name: "{{ model_item }}"
+
+    - name: Show summary
+      debug:
+        msg: "Deployed dataloader, modeltrainer(s) and ELK stack to namespace {{ k8s_namespace }}"

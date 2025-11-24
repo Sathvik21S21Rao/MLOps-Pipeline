@@ -1,0 +1,13 @@
+---
+# General k8s settings and pipeline parameters
+k8s_namespace: ml-pipeline
+hf_data_path: /data/huggingface
+models:
+  - sgd
+  - logistic
+  - random_forest
+modeltrainer_image: "nihonium/modeltrainer:latest"
+dataloader_image: "nihonium/dataloader:latest"
+logstash_image: "docker.elastic.co/logstash/logstash:8.8.1"
+elasticsearch_image: "docker.elastic.co/elasticsearch/elasticsearch:8.8.1"
+kibana_image: "docker.elastic.co/kibana/kibana:8.8.1"

@@ -1,7 +1,5 @@
 datasets
-transformers
-evaluate
 scikit-learn
-accelerate
-torch
+evaluate
 numpy
+joblib
