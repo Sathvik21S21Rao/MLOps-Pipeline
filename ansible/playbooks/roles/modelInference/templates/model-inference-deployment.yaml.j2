@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ deployment_name | default('model-inference') }}"
+  namespace: "{{ k8s_namespace }}"
+  labels:
+    app: "{{ app_label | default('modelinference') }}"
+spec:
+  replicas: {{ replicas | default(1) }}
+  selector:
+    matchLabels:
+      app: "{{ app_label | default('modelinference') }}"
+  template:
+    metadata:
+      labels:
+        app: "{{ app_label | default('modelinference') }}"
+    spec:
+{% if image_pull_secret is defined and image_pull_secret %}
+      imagePullSecrets:
+        - name: "{{ image_pull_secret }}"
+{% endif %}
+      containers:
+        - name: model-inference
+          image: "{{ modedlinference_image | default('myregistry/model-inference:latest') }}"
+          imagePullPolicy: "{{ image_pull_policy | default('IfNotPresent') }}"
+          ports:
+            - containerPort: {{ target_port | default(8080) }}
+          env:
+            - name: MODEL_OUTPUT_DIR
+              value: "{{ model_path | default('/model') }}"
+            - name: MODEL_PATH
+              value: "{{ model_path | default('/model') }}"
+            - name: MODEL_NAME
+              value: "{{ model_name | default('model') }}"
+          volumeMounts:
+            - name: model-storage
+              mountPath: "{{ model_path | default('/model') }}"
+          readinessProbe:
+            httpGet:
+              path: "{{ readiness_path | default('/health') }}"
+              port: {{ target_port | default(8080) }}
+            initialDelaySeconds: {{ readiness_initial_delay | default(5) }}
+            periodSeconds: {{ readiness_period | default(10) }}
+          livenessProbe:
+            httpGet:
+              path: "{{ liveness_path | default('/health') }}"
+              port: {{ target_port | default(8080) }}
+            initialDelaySeconds: {{ liveness_initial_delay | default(30) }}
+            periodSeconds: {{ liveness_period | default(30) }}
+{% if container_resources is defined %}
+          resources:
+{{ container_resources | to_nice_yaml | indent(12) }}
+{% endif %}
+      volumes:
+        - name: model-storage
+          persistentVolumeClaim:
+            claimName: "{{ pvc_name | default('model-output-pvc') }}"

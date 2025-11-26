@@ -3,7 +3,7 @@
   name: Deploy ML data-loading and training pipeline to Kubernetes
   hosts: localhost
   connection: local
-  gather_facts: no
+  gather_facts: false
   vars_files:
     - ../group_vars/all/vault.yml
 
@@ -24,6 +24,16 @@
         loop_var: model_item
       vars:
         model_name: "{{ model_item }}"
+
+    - name: Run model inference for each trained model
+      include_role:
+        name: modelInference
+      loop: "{{ models }}"
+      loop_control:
+        loop_var: model_item
+      vars:
+        model_name: "{{ model_item }}"
+        modeltrainer_ran: true
 
     - name: Show summary
       debug:

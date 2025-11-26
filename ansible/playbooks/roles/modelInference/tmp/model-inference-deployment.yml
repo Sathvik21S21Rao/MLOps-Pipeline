@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-inference
+  namespace: ml-pipeline
+  labels:
+    app: modelinference
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: modelinference
+  template:
+    metadata:
+      labels:
+        app: modelinference
+    spec:
+      containers:
+        - name: model-inference
+          image: "nikhilesh611/model-inference:latest"
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 8000
+          env:
+            - name: MODEL_OUTPUT_DIR
+              value: "/app/model_output"
+            - name: MODEL_PATH
+              value: "/app/model_output/tfidf-sklearn.joblib"
+            - name: MODEL_NAME
+              value: "tfidf-sklearn"
+          volumeMounts:
+            - name: model-storage
+              mountPath: "/app/model_output"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+      volumes:
+        - name: model-storage
+          persistentVolumeClaim:
+            claimName: model-output-pvc
