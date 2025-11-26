@@ -15,7 +15,7 @@ from sklearn.metrics import accuracy_score, f1_score
 # --- Configuration ---
 DATA_PATH = os.environ.get("PROCESSED_DATA_PATH", "/app/data")
 OUTPUT_DIR = os.environ.get("MODEL_OUTPUT_DIR", "/app/model_output")
-MODEL_NAME = os.environ.get("MODEL_NAME", "tfidf-sklearn")
+MODEL_NAME = os.environ.get("MODEL_TYPE", "tfidf-sklearn")
 
 LOGSTASH_HOST = os.environ.get("LOGSTASH_HOST", "logstash")
 LOGSTASH_PORT = int(os.environ.get("LOGSTASH_PORT", "5004"))
@@ -85,6 +85,7 @@ class EmailModelTrainer:
 
         os.makedirs(self.output_dir, exist_ok=True)
         model_path = os.path.join(self.output_dir, f"{MODEL_NAME}.joblib")
+        print(model_path)
         joblib.dump(self.pipeline, model_path)
         print(f"Model saved to {model_path}")
 

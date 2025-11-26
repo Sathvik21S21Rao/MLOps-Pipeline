@@ -8,7 +8,7 @@ load_dotenv()
 
 DATASET_ID = os.environ.get("DATASET_ID", "jason23322/high-accuracy-email-classifier")
 OUTPUT_VOLUME_PATH = os.environ.get("PROCESSED_DATA_PATH", "/app/data")
-
+print(OUTPUT_VOLUME_PATH)
 class EmailDatasetPreparer:
     def __init__(self, dataset_id: str):
         self.dataset_id = dataset_id

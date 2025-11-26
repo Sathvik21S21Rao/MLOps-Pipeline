@@ -5,11 +5,9 @@ hf_data_path: /data/huggingface
 target_port: 8000
 models:
   - sgd
-  - logistic
-  - random_forest
 modeltrainer_image: "shreyankgopal403/modeltrainer:latest"
 dataloader_image: "shreyankgopal403/dataloader:latest"
-modelinference_image: "nikhilesh611/model-inference:latest"
+modelinference_image: "shreyankgopal403/model-inference:latest"
 logstash_image: "docker.elastic.co/logstash/logstash:8.8.1"
 elasticsearch_image: "docker.elastic.co/elasticsearch/elasticsearch:8.8.1"
 kibana_image: "docker.elastic.co/kibana/kibana:8.8.1"

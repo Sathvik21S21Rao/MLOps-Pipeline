@@ -1,19 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: "{{ deployment_name | default('model-inference') }}"
+  name: "inference-deployment-{{ model_name }}"
   namespace: "{{ k8s_namespace }}"
   labels:
     app: "{{ app_label | default('modelinference') }}"
+    model: "{{ model_name }}"
 spec:
   replicas: {{ replicas | default(1) }}
   selector:
     matchLabels:
       app: "{{ app_label | default('modelinference') }}"
+      model: "{{ model_name }}"
   template:
     metadata:
       labels:
         app: "{{ app_label | default('modelinference') }}"
+        model: "{{ model_name }}"
     spec:
 {% if image_pull_secret is defined and image_pull_secret %}
       imagePullSecrets:
@@ -21,7 +24,7 @@ spec:
 {% endif %}
       containers:
         - name: model-inference
-          image: "{{ modedlinference_image | default('myregistry/model-inference:latest') }}"
+          image: "{{ modelinference_image }}"
           imagePullPolicy: "{{ image_pull_policy | default('IfNotPresent') }}"
           ports:
             - containerPort: {{ target_port | default(8080) }}

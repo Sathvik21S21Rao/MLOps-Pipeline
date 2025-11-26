@@ -16,7 +16,7 @@ spec:
           image: {{ modeltrainer_image }}
           env:
             - name: MODEL_TYPE
-              value: "{{ model_name }}"
+              value: {{ model_name }}
             - name: PROCESSED_DATA_PATH
               value: "/app/data"
             - name: HF_API_TOKEN
@@ -29,12 +29,12 @@ spec:
             - name: LOGSTASH_PORT
               value: "5004"
             - name: MODEL_OUTPUT_DIR
-              value: "/app/model_{{ safe_model }}"
+              value: "/model"
           volumeMounts:
             - name: data-volume
               mountPath: /app/data
             - name: model-output-volume
-              mountPath: /app/model_{{ safe_model }}
+              mountPath: /model
           resources:
             limits:
               cpu: "1000m"

@@ -12,7 +12,7 @@ spec:
         - name: dataloader
           image: {{ dataloader_image }}
           env:
-            - name: HF_DATA_PATH
+            - name: PROCESSED_DATA_PATH
               value: "/app/data"
             - name: HF_API_TOKEN
               valueFrom:

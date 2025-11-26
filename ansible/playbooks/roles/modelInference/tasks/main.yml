@@ -40,17 +40,16 @@
     state: absent
   ignore_errors: true
 
-- name: Wait for previous deployment to terminate (optional)
+- name: Wait for previous deployment to terminate
   kubernetes.core.k8s_info:
     api_version: apps/v1
     kind: Deployment
     name: "inference-deployment-{{ model_name }}"
     namespace: "{{ k8s_namespace }}"
   register: prev_deploy_info
+  until: (prev_deploy_info.resources | length) == 0
   retries: 6
   delay: 2
-  until: prev_deploy_info.resources | length == 0
-  # if deployment didn't exist, this will pass quickly
 
 - name: Apply model inference deployment
   kubernetes.core.k8s:
@@ -64,6 +63,10 @@
     definition: "{{ lookup('template', 'model-inference-service.yaml.j2') }}"
   register: service_apply
 
+##############################################################
+#                      IMPORTANT: FIXED
+##############################################################
+
 - name: Wait for deployment to report ready replicas
   kubernetes.core.k8s_info:
     api_version: apps/v1
@@ -72,47 +75,50 @@
     namespace: "{{ k8s_namespace }}"
   register: deploy_info
   until: >
-    deploy_info.resources
-    and deploy_info.resources[0].status is defined
-    and (deploy_info.resources[0].status.readyReplicas | default(0)) | int >= (lookup('vars', 'deployment_min_replicas') | default(1) | int)
+    (deploy_info.resources | length) > 0
+    and (deploy_info.resources[0].status is defined)
+    and ((deploy_info.resources[0].status.readyReplicas | default(0) | int) >=
+         (deployment_min_replicas | default(1) | int))
   retries: 30
   delay: 5
+
+##############################################################
 
 - name: Show deployment status
   debug:
     msg:
-      - "Deployment applied: {{ deployment_apply | default({}) | json }} "
-      - "Service applied: {{ service_apply | default({}) | json }} "
-      - "Deployment readyReplicas: {{ deploy_info.resources[0].status.readyReplicas | default(0) }}"
+      - "Deployment applied: {{ deployment_apply | json }}"
+      - "Service applied: {{ service_apply | json }}"
+      - "Ready replicas: {{ deploy_info.resources[0].status.readyReplicas | default(0) }}"
 
-# Optional: gather pods and print logs (helpful for debugging first deploy)
-- name: Gather pods for the inference deployment (for logs) - optional
+# Optional debugging
+- name: Gather inference pods
+  when: debug | default(false)
   kubernetes.core.k8s_info:
     api_version: v1
     kind: Pod
     namespace: "{{ k8s_namespace }}"
     label_selectors:
-      - "app=inference"
+      - "app=modelinference"
       - "model={{ model_name }}"
   register: inference_pods
-  when: debug | default(false)
 
-- name: Print inference pod names (optional)
+- name: Show pod names
+  when: debug | default(false)
   debug:
     msg: "Inference pods: {{ inference_pods.resources | map(attribute='metadata.name') | list }}"
-  when: debug | default(false)
 
-- name: Fetch logs from inference pods (optional)
-  when: (debug | default(false)) and inference_pods.resources | length > 0
+- name: Fetch logs from inference pods
+  when: debug | default(false) and (inference_pods.resources | length) > 0
   block:
-    - name: Get logs for each inference pod
+    - name: Get logs
       kubernetes.core.k8s_log:
         namespace: "{{ k8s_namespace }}"
         name: "{{ item.metadata.name }}"
       loop: "{{ inference_pods.resources }}"
       register: pod_logs
 
-    - name: Show last logs (optional)
+    - name: Show logs
       debug:
         msg: "{{ item.stdout | default(item) }}"
       loop: "{{ pod_logs.results }}"
