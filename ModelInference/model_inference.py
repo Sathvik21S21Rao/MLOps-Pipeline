@@ -6,8 +6,8 @@ from pydantic import BaseModel
 
 # --- Configuration ---
 MODEL_OUTPUT_DIR = os.environ.get("MODEL_OUTPUT_DIR", "/app/model_output")
-#MODEL_NAME = os.environ.get("MODEL_NAME", "tfidf-sklearn")
-MODEL_NAME="tfidf-sklearn"
+MODEL_NAME = os.environ.get("MODEL_NAME", "tfidf-sklearn")
+
 print(MODEL_NAME)
 MODEL_PATH = os.path.join(MODEL_OUTPUT_DIR, f"{MODEL_NAME}.joblib")
 print(MODEL_PATH)

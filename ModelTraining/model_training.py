@@ -70,7 +70,7 @@ class EmailModelTrainer:
         n = (name or "").lower()
         if "log" in n or "logistic" in n:
             return LogisticRegression(max_iter=1000)
-        if "rf" in n or "random" in n:
+        if "rf" in n or "random_forest" in n:
             return RandomForestClassifier(n_estimators=100)
         # default and 'sgd' -> linear model with log loss
         return SGDClassifier(loss="log_loss", max_iter=1000, tol=1e-3)

@@ -31,10 +31,8 @@ spec:
           env:
             - name: MODEL_OUTPUT_DIR
               value: "{{ model_path | default('/model') }}"
-            - name: MODEL_PATH
-              value: "{{ model_path | default('/model') }}"
             - name: MODEL_NAME
-              value: "{{ model_name | default('model') }}"
+              value: "{{ model_name }}"
           volumeMounts:
             - name: model-storage
               mountPath: "{{ model_path | default('/model') }}"
