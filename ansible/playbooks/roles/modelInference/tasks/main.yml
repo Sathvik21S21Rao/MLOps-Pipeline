@@ -88,9 +88,9 @@
 - name: Show deployment status
   debug:
     msg:
-      - "Deployment applied: {{ deployment_apply | json }}"
-      - "Service applied: {{ service_apply | json }}"
-      - "Ready replicas: {{ deploy_info.resources[0].status.readyReplicas | default(0) }}"
+      - "Deployment applied: {{ deployment_apply | to_nice_json }}"
+      - "Service applied: {{ service_apply | to_nice_json }}"
+      - "Deployment readyReplicas: {{ deploy_info.resources[0].status.readyReplicas | default(0) }}"
 
 # Optional debugging
 - name: Gather inference pods
