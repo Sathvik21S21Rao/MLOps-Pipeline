@@ -3,9 +3,9 @@ pipeline {
 
     environment {
         DOCKER_CLI_EXPERIMENTAL = "enabled"
-        REGISTRY = "shreyankgopal403"
+        REGISTRY = "nikhilesh611"
         NAMESPACE = "default"
-        PYTHON_INTERPRETER = "/Users/SGBHAT/Library/CloudStorage/OneDrive-iiit-b/IIIT-B/sem-7/SPE/MajorProject/MLOps-Pipeline/.venv/bin/python"
+        PYTHON_INTERPRETER = "/usr/bin/python3"
     }
 
     stages {
