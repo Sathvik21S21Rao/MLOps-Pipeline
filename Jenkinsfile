@@ -16,6 +16,15 @@ pipeline {
             }
         }
 
+        stage("Check docker buildx version") {
+            steps {
+                sh '''
+                    docker buildx create --name mybuilder --use || true
+                    docker buildx inspect --bootstrap
+                '''
+            }
+        }
+
         stage('Build & Push DataLoader Image') {
             steps {
                 sh '''
