@@ -15,7 +15,7 @@ from sklearn.metrics import accuracy_score, f1_score
 # --- Configuration ---
 DATA_PATH = os.environ.get("PROCESSED_DATA_PATH", "/app/data")
 OUTPUT_DIR = os.environ.get("MODEL_OUTPUT_DIR", "/app/model_output")
-MODEL_NAME = os.environ.get("MODEL_NAME", "tfidf-sklearn")
+MODEL_NAME = os.environ.get("MODEL_TYPE", "tfidf-sklearn")
 
 LOGSTASH_HOST = os.environ.get("LOGSTASH_HOST", "logstash")
 LOGSTASH_PORT = int(os.environ.get("LOGSTASH_PORT", "5004"))
@@ -70,7 +70,7 @@ class EmailModelTrainer:
         n = (name or "").lower()
         if "log" in n or "logistic" in n:
             return LogisticRegression(max_iter=1000)
-        if "rf" in n or "random" in n:
+        if "rf" in n or "random_forest" in n:
             return RandomForestClassifier(n_estimators=100)
         # default and 'sgd' -> linear model with log loss
         return SGDClassifier(loss="log_loss", max_iter=1000, tol=1e-3)
@@ -85,6 +85,7 @@ class EmailModelTrainer:
 
         os.makedirs(self.output_dir, exist_ok=True)
         model_path = os.path.join(self.output_dir, f"{MODEL_NAME}.joblib")
+        print(model_path)
         joblib.dump(self.pipeline, model_path)
         print(f"Model saved to {model_path}")
 
