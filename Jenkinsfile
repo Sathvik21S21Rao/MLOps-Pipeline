@@ -5,7 +5,7 @@ pipeline {
     DOCKER_CLI_EXPERIMENTAL = "enabled"
     REGISTRY = "nikhilesh611"
     NAMESPACE = "default"
-    PYTHON_INTERPRETER = "/usr/bin/python3"
+    PYTHON_INTERPRETER = "$HOME/pipeline-venv/bin/python"
     DOCKER_CREDENTIALS_ID = "dockerhub-creds"
   }
 
