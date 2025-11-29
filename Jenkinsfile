@@ -5,8 +5,10 @@ pipeline {
     DOCKER_CLI_EXPERIMENTAL = "enabled"
     REGISTRY = "nikhilesh611"
     NAMESPACE = "default"
-    PYTHON_INTERPRETER = "$HOME/pipeline-venv/bin/python"
+    # if your venv is at $HOME/pipeline-venv, this will be replaced when used in the shell
+    VENV_PATH = "$HOME/pipeline-venv"
     DOCKER_CREDENTIALS_ID = "dockerhub-creds"
+    ANSIBLE_VAULT_CRED_ID = "ansible-vault-pass"
   }
 
   stages {
@@ -23,7 +25,6 @@ pipeline {
                                           usernameVariable: 'DOCKER_USER',
                                           passwordVariable: 'DOCKER_PASS')]) {
           sh '''
-            # exit on error
             set -e
 
             echo "==> Clearing any existing docker login (safe)"
@@ -106,17 +107,45 @@ pipeline {
 
     stage('Deploy to Kubernetes using Ansible') {
       steps {
-        sh '''
-          set -e
-          PYTHON_INTERPRETER="$(command -v python3 || command -v python || echo /usr/bin/python3)"
-          echo "Using Ansible python interpreter: $PYTHON_INTERPRETER"
+        withCredentials([string(credentialsId: env.ANSIBLE_VAULT_CRED_ID, variable: 'VAULT_PASS')]) {
+          sh '''
+            set -e
 
-          ansible-playbook ansible/playbooks/deploy_pipeline.yml \
-            -i ansible/inventory.ini \
-            --extra-vars "k8s_namespace=${NAMESPACE}" \
-            --vault-password-file ~/.vault_pass.txt \
-            -e "ansible_python_interpreter=${PYTHON_INTERPRETER}"
-        '''
+            # create temporary vault file in HOME and make it private to the jenkins user
+            VAULT_FILE="$HOME/.ansible_vault_pass.txt"
+            printf "%s" "$VAULT_PASS" > "$VAULT_FILE"
+            chmod 600 "$VAULT_FILE"
+
+            # prefer venv python if it exists; otherwise fall back to system python3
+            if [ -x "$VENV_PATH/bin/activate" ]; then
+              echo "Activating venv at $VENV_PATH"
+              # shellcheck disable=SC1090
+              . "$VENV_PATH/bin/activate"
+              ANSIBLE_PY="$VENV_PATH/bin/python"
+            else
+              echo "No venv found at $VENV_PATH; falling back to system python3"
+              ANSIBLE_PY="$(command -v python3 || command -v python || echo /usr/bin/python3)"
+            fi
+
+            echo "Using Ansible python interpreter: $ANSIBLE_PY"
+
+            # ensure required controller libs are present (idempotent)
+            # only install into venv (if active)
+            if [ -n "$VIRTUAL_ENV" ]; then
+              pip install --quiet --upgrade pip
+              pip install --quiet ansible kubernetes openshift pyyaml requests || true
+            fi
+
+            ansible-playbook ansible/playbooks/deploy_pipeline.yml \
+              -i ansible/inventory.ini \
+              --extra-vars "k8s_namespace=${NAMESPACE}" \
+              --vault-password-file "$VAULT_FILE" \
+              -e "ansible_python_interpreter=$ANSIBLE_PY"
+
+            # secure cleanup of vault file
+            shred -u -z "$VAULT_FILE" || rm -f "$VAULT_FILE"
+          '''
+        }
       }
     }
   }
