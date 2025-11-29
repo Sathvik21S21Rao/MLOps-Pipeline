@@ -5,10 +5,10 @@ pipeline {
     DOCKER_CLI_EXPERIMENTAL = "enabled"
     REGISTRY = "nikhilesh611"
     NAMESPACE = "default"
-    VENV_PATH = "/home/nikhilesh/pipeline-venv"
+    VENV_PATH = "/Users/SGBHAT/Library/CloudStorage/OneDrive-iiit-b/IIIT-B/sem-7/SPE/MajorProject/MLOps-Pipeline/.venv"
     DOCKER_CREDENTIALS_ID = "dockerhub-creds"
     ANSIBLE_VAULT_CRED_ID = "ansible-vault-pass"
-    ANSIBLE_PYTHON_INTERPRETER = "/home/nikhilesh/pipeline-venv/bin/python"
+    ANSIBLE_PYTHON_INTERPRETER = "/Users/SGBHAT/Library/CloudStorage/OneDrive-iiit-b/IIIT-B/sem-7/SPE/MajorProject/MLOps-Pipeline/.venv/bin/python"
   }
 
   stages {
