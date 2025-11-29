@@ -3,7 +3,7 @@ pipeline {
 
   environment {
     DOCKER_CLI_EXPERIMENTAL = "enabled"
-    REGISTRY = "nikhilesh611"
+    REGISTRY = "shreyankgopal403"
     NAMESPACE = "default"
     VENV_PATH = "/Users/SGBHAT/Library/CloudStorage/OneDrive-iiit-b/IIIT-B/sem-7/SPE/MajorProject/MLOps-Pipeline/.venv"
     DOCKER_CREDENTIALS_ID = "dockerhub-creds"
