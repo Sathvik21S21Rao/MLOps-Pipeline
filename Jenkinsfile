@@ -5,9 +5,10 @@ pipeline {
     DOCKER_CLI_EXPERIMENTAL = "enabled"
     REGISTRY = "nikhilesh611"
     NAMESPACE = "default"
-    VENV_PATH = "$HOME/pipeline-venv"
+    VENV_PATH = "/home/nikhilesh/pipeline-venv"
     DOCKER_CREDENTIALS_ID = "dockerhub-creds"
     ANSIBLE_VAULT_CRED_ID = "ansible-vault-pass"
+    ANSIBLE_PYTHON_INTERPRETER = "/home/nikhilesh/pipeline-venv/bin/python"
   }
 
   stages {
