@@ -5,7 +5,6 @@ pipeline {
     DOCKER_CLI_EXPERIMENTAL = "enabled"
     REGISTRY = "nikhilesh611"
     NAMESPACE = "default"
-    # if your venv is at $HOME/pipeline-venv, this will be replaced when used in the shell
     VENV_PATH = "$HOME/pipeline-venv"
     DOCKER_CREDENTIALS_ID = "dockerhub-creds"
     ANSIBLE_VAULT_CRED_ID = "ansible-vault-pass"
