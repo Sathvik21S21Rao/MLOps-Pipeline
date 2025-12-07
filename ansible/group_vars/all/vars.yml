@@ -7,7 +7,7 @@ models:
   - sgd
 modeltrainer_image: "shreyankgopal403/modeltrainer:latest"
 dataloader_image: "shreyankgopal403/dataloader:latest"
-modelinference_image: "nihonium/model-inference:latest"
+modelinference_image: "shreyankgopal403/model-inference:latest"
 driftmonitor_image: "shreyankgopal403/drift-monitor:latest"
 logstash_image: "docker.elastic.co/logstash/logstash:8.8.1"
 elasticsearch_image: "docker.elastic.co/elasticsearch/elasticsearch:8.8.1"
