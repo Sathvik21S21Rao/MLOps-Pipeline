@@ -2,3 +2,4 @@
 api_token
 DataLoading/.env
 data/
+ansible/group_vars/all/ansible_vault_pass.txt

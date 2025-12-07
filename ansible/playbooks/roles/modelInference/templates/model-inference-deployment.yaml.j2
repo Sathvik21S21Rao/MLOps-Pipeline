@@ -33,6 +33,10 @@ spec:
               value: "{{ model_path | default('/model') }}"
             - name: MODEL_NAME
               value: "{{ model_name }}"
+            - name: LOGSTASH_HOST
+              value: "{{ logstash_host | default('logstash') }}"
+            - name: LOGSTASH_PORT
+              value: "{{ logstash_port | default('5004') }}"
           volumeMounts:
             - name: model-storage
               mountPath: "{{ model_path | default('/model') }}"

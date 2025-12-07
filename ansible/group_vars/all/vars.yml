@@ -7,7 +7,23 @@ models:
   - sgd
 modeltrainer_image: "shreyankgopal403/modeltrainer:latest"
 dataloader_image: "shreyankgopal403/dataloader:latest"
-modelinference_image: "shreyankgopal403/model-inference:latest"
+modelinference_image: "nihonium/model-inference:latest"
+driftmonitor_image: "shreyankgopal403/drift-monitor:latest"
 logstash_image: "docker.elastic.co/logstash/logstash:8.8.1"
 elasticsearch_image: "docker.elastic.co/elasticsearch/elasticsearch:8.8.1"
 kibana_image: "docker.elastic.co/kibana/kibana:8.8.1"
+
+# HPA settings for model inference autoscaling
+deployment_min_replicas: 1
+deployment_max_replicas: 5
+deployment_cpu_target: 70
+deployment_memory_target: 80
+
+# Drift monitor settings
+jenkins_url: "http://localhost:8080"
+jenkins_user: "admin"
+drift_check_interval: "300"  # 5 minutes
+drift_lookback_minutes: "15"
+drift_skewness_threshold: "0.7"  # Trigger if one class > 70%
+drift_min_samples: "50"
+

@@ -1,0 +1,4 @@
+# Add Jenkins token to vault.yml:
+# Run: ansible-vault edit ansible/group_vars/all/vault.yml
+# Add this line:
+jenkins_token: "your-jenkins-api-token-here"

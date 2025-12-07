@@ -1,0 +1,12 @@
+---
+- name: Create drift monitor deployment
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'drift-monitor-deployment.yaml.j2') }}"
+    namespace: "{{ k8s_namespace }}"
+
+- name: Create drift monitor secret for Jenkins credentials
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'drift-monitor-secret.yaml.j2') }}"
+    namespace: "{{ k8s_namespace }}"

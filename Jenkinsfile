@@ -105,6 +105,27 @@ pipeline {
       }
     }
 
+    stage('Build & Push DriftMonitor Image') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID,
+                                          usernameVariable: 'DOCKER_USER',
+                                          passwordVariable: 'DOCKER_PASS')]) {
+          sh '''
+            set -e
+            echo "==> (DriftMonitor) Ensure login"
+            docker logout || true
+            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+
+            docker buildx build \
+              --platform linux/amd64,linux/arm64 \
+              -t $REGISTRY/drift-monitor:latest \
+              --push \
+              ./DriftMonitor
+          '''
+        }
+      }
+    }
+
     stage('Deploy to Kubernetes using Ansible') {
       steps {
         withCredentials([string(credentialsId: env.ANSIBLE_VAULT_CRED_ID, variable: 'VAULT_PASS')]) {

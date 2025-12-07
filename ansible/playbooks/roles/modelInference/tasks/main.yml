@@ -63,6 +63,12 @@
     definition: "{{ lookup('template', 'model-inference-service.yaml.j2') }}"
   register: service_apply
 
+- name: Apply horizontal pod autoscaler for model inference
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'model-inference-hpa.yaml.j2') }}"
+  register: hpa_apply
+
 ##############################################################
 #                      IMPORTANT: FIXED
 ##############################################################
