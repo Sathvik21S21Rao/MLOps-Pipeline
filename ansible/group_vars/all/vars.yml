@@ -5,6 +5,8 @@ hf_data_path: /data/huggingface
 target_port: 8000
 models:
   - sgd
+  - log
+elasticsearch_url: "http://localhost:9200"
 modeltrainer_image: "shreyankgopal403/modeltrainer:latest"
 dataloader_image: "shreyankgopal403/dataloader:latest"
 modelinference_image: "shreyankgopal403/model-inference:latest"

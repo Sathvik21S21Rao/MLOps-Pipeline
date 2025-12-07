@@ -25,20 +25,26 @@
       vars:
         model_name: "{{ model_item }}"
 
-    - name: Run model inference for each trained model
+    - name: Determine best model from training metrics (Elasticsearch)
+      ansible.builtin.script: "../scripts/select_best_model.py {{ elasticsearch_url }} {{ models | join(',') }}"
+      register: best_model_result
+      failed_when: false
+
+    - name: Set best_model fact (fallback to first model)
+      set_fact:
+        best_model: "{{ best_model_result.stdout if best_model_result.stdout else (models[0] if models|length>0 else '') }}"
+
+    - name: Run model inference for best model
       include_role:
         name: modelInference
-      loop: "{{ models }}"
-      loop_control:
-        loop_var: model_item
       vars:
-        model_name: "{{ model_item }}"
+        model_name: "{{ best_model }}"
         modeltrainer_ran: true
 
-    - name: Deploy drift monitor
-      include_role:
-        name: driftmonitor
+    # - name: Deploy drift monitor
+    #   include_role:
+    #     name: driftmonitor
 
-    - name: Show summary
-      debug:
-        msg: "Deployed dataloader, modeltrainer(s), model inference, drift monitor and ELK stack to namespace {{ k8s_namespace }}"
+    # - name: Show summary
+    #   debug:
+    #     msg: "Deployed dataloader, modeltrainer(s), model inference, drift monitor and ELK stack to namespace {{ k8s_namespace }}"
