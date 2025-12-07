@@ -6,7 +6,7 @@ pipeline {
     REGISTRY = "shreyankgopal403"
     NAMESPACE = "default"
     VENV_PATH = "/Users/SGBHAT/Library/CloudStorage/OneDrive-iiit-b/IIIT-B/sem-7/SPE/MajorProject/MLOps-Pipeline/.venv"
-    DOCKER_CREDENTIALS_ID = "dockerhub-creds"
+    DOCKER_CREDENTIALS_ID = "	dockerhub-credentials"
     ANSIBLE_VAULT_CRED_ID = "ansible-vault-pass"
     ANSIBLE_PYTHON_INTERPRETER = "/Users/SGBHAT/Library/CloudStorage/OneDrive-iiit-b/IIIT-B/sem-7/SPE/MajorProject/MLOps-Pipeline/.venv/bin/python"
   }

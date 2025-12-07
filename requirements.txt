@@ -1,0 +1,14 @@
+datasets
+huggingface_hub
+python-dotenv
+
+scikit-learn
+numpy
+joblib
+evaluate
+
+fastapi
+pydantic
+uvicorn
+
+requests==2.31.0

@@ -1,6 +1,6 @@
 ---
 # General k8s settings and pipeline parameters
-k8s_namespace: ml-pipeline
+k8s_namespace: default
 hf_data_path: /data/huggingface
 target_port: 8000
 models:
@@ -23,7 +23,7 @@ deployment_memory_target: 80
 
 # Drift monitor settings
 jenkins_url: "http://localhost:8080"
-jenkins_user: "admin"
+jenkins_user: "sgbhat"
 drift_check_interval: "300"  # 5 minutes
 drift_lookback_minutes: "15"
 drift_skewness_threshold: "0.7"  # Trigger if one class > 70%

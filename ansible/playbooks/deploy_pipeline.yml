@@ -41,10 +41,10 @@
         model_name: "{{ best_model }}"
         modeltrainer_ran: true
 
-    # - name: Deploy drift monitor
-    #   include_role:
-    #     name: driftmonitor
+    - name: Deploy drift monitor
+      include_role:
+        name: driftmonitor
 
-    # - name: Show summary
-    #   debug:
-    #     msg: "Deployed dataloader, modeltrainer(s), model inference, drift monitor and ELK stack to namespace {{ k8s_namespace }}"
+    - name: Show summary
+      debug:
+        msg: "Deployed dataloader, modeltrainer(s), model inference, drift monitor and ELK stack to namespace {{ k8s_namespace }}"
