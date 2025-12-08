@@ -122,7 +122,7 @@ pipeline {
       steps {
         withCredentials([
           usernamePassword(
-            credentialsId: env.DOCKCKER_CREDENTIALS_ID,
+            credentialsId: env.DOCKER_CREDENTIALS_ID,
             usernameVariable: 'DOCKER_USER',
             passwordVariable: 'DOCKER_PASS'
           )
@@ -144,37 +144,44 @@ pipeline {
     }
 
     stage('Deploy to Kubernetes using Ansible') {
-      steps {
-        withCredentials([string(credentialsId: env.ANSIBLE_VAULT_CRED_ID, variable: 'VAULT_PASS')]) {
-          sh '''
-            set -e
+  steps {
+    withCredentials([string(credentialsId: env.ANSIBLE_VAULT_CRED_ID, variable: 'VAULT_PASS')]) {
+      sh '''
+        set -e
 
-            VAULT_FILE="$HOME/.ansible_vault_pass.txt"
-            printf "%s" "$VAULT_PASS" > "$VAULT_FILE"
-            chmod 600 "$VAULT_FILE"
+        cd "$WORKSPACE"
 
-            if [ -x "$VENV_PATH/bin/activate" ]; then
-              . "$VENV_PATH/bin/activate"
-              ANSIBLE_PY="$VENV_PATH/bin/python"
-            else
-              ANSIBLE_PY=$(which python3)
-            fi
+        echo "==> Creating local vault file"
+        VAULT_FILE="$HOME/.ansible_vault_pass.txt"
+        printf "%s" "$VAULT_PASS" > "$VAULT_FILE"
+        chmod 600 "$VAULT_FILE"
 
-            pip install --quiet --upgrade pip
-            pip install --quiet ansible kubernetes openshift pyyaml requests
+        echo "==> Checking if venv exists"
+        if [ ! -d "$WORKSPACE/.venv" ]; then
+          echo "==> Creating virtual environment"
+          python3 -m venv "$WORKSPACE/.venv"
+        fi
 
-            ansible-playbook ansible/playbooks/deploy_pipeline.yml \
-              -i ansible/inventory.ini \
-              --extra-vars "k8s_namespace=${NAMESPACE}" \
-              --vault-password-file "$VAULT_FILE" \
-              -e "ansible_python_interpreter=$ANSIBLE_PY"
+        echo "==> Activating virtual environment"
+        . "$WORKSPACE/.venv/bin/activate"
 
-            shred -u -z "$VAULT_FILE" || rm -f "$VAULT_FILE"
-          '''
-        }
-      }
+        echo "==> Installing required Python packages"
+        pip install --upgrade pip
+        pip install ansible kubernetes openshift pyyaml requests
+
+        echo "==> Running Ansible Playbook"
+        ansible-playbook ansible/playbooks/deploy_pipeline.yml \
+          -i ansible/inventory.ini \
+          --extra-vars "k8s_namespace=${NAMESPACE}" \
+          --vault-password-file "$VAULT_FILE" \
+          -e "ansible_python_interpreter=$WORKSPACE/.venv/bin/python"
+
+        echo "==> Cleaning up vault file"
+        shred -u -z "$VAULT_FILE" || rm -f "$VAULT_FILE"
+      '''
     }
   }
+}
 
   post {
     success { echo "🚀 Pipeline executed successfully!" }
