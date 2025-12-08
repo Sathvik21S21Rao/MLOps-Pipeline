@@ -4,19 +4,96 @@ import os
 import socket
 import sys
 import time
+import urllib.request
+import urllib.error
 from datetime import datetime
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+
+def _fetch_best_model_from_elasticsearch(default_model: str) -> str:
+    """Query Elasticsearch training_metrics to pick best model by f1 then accuracy."""
+    if not ELASTICSEARCH_URL:
+        return default_model
+
+    query = {
+        "size": 0,
+        "query": {"term": {"log_type.keyword": "training_metrics"}},
+        "aggs": {
+            "by_model": {
+                "terms": {"field": "model_name.keyword", "size": 50},
+                "aggs": {
+                    "latest": {
+                        "top_hits": {
+                            "sort": [{"timestamp": {"order": "desc"}}],
+                            "size": 1,
+                        }
+                    }
+                },
+            }
+        },
+    }
+
+    # Query all indices to avoid missing training_metrics if index pattern differs
+    url = ELASTICSEARCH_URL.rstrip("/") + "/_search"
+    data = json.dumps(query).encode("utf-8")
+    headers = {"Content-Type": "application/json"}
+    password_mgr = None
+    opener = None
+
+    if ELASTICSEARCH_USER and ELASTICSEARCH_PASSWORD:
+        password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+        password_mgr.add_password(None, url, ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD)
+        handler = urllib.request.HTTPBasicAuthHandler(password_mgr)
+        opener = urllib.request.build_opener(handler)
+    else:
+        opener = urllib.request.build_opener()
+
+    req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+
+    try:
+        with opener.open(req, timeout=10) as resp:
+            payload = json.load(resp)
+            print(payload)
+    except Exception as exc:  # noqa: BLE001 keep broad so we fall back
+        print(f"Failed to query Elasticsearch for best model: {exc}")
+        return default_model
+
+    buckets = payload.get("aggregations", {}).get("by_model", {}).get("buckets", [])
+    best = None
+    for bucket in buckets:
+        name = bucket.get("key")
+        hits = bucket.get("latest", {}).get("hits", {}).get("hits", [])
+        if not hits:
+            continue
+        src = hits[0].get("_source", {})
+        metrics = src.get("metrics", {}) or {}
+        # handle nested metrics.metrics and also nested under metrics.metrics again
+        if isinstance(metrics, dict) and "metrics" in metrics:
+            metrics = metrics.get("metrics", {}) or metrics
+        if isinstance(metrics, dict) and "metrics" in metrics:
+            metrics = metrics.get("metrics", {}) or metrics
+        f1 = metrics.get("f1")
+        acc = metrics.get("accuracy")
+        score = (f1 or 0, acc or 0)
+        if best is None or score > best[1]:
+            best = (name, score)
+
+    return best[0] if best else default_model
 
 # --- Configuration ---
 MODEL_OUTPUT_DIR = os.environ.get("MODEL_OUTPUT_DIR", "/app/model_output")
 MODEL_NAME = os.environ.get("MODEL_NAME", "tfidf-sklearn")
 LOGSTASH_HOST = os.environ.get("LOGSTASH_HOST", "logstash")
 LOGSTASH_PORT = int(os.environ.get("LOGSTASH_PORT", "5004"))
+ELASTICSEARCH_URL = os.environ.get("ELASTICSEARCH_URL", "http://elasticsearch:9200") 
+ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER", "")
+ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD", "")
 label_mapping = {1: "Social Media", 2: "Promotions", 3: "Forum", 4: "Spam", 5: "Verify Code", 6: "Updates"}
-print(MODEL_NAME)
+MODEL_NAME = _fetch_best_model_from_elasticsearch(MODEL_NAME)
 MODEL_PATH = os.path.join(MODEL_OUTPUT_DIR, f"{MODEL_NAME}.joblib")
 print(MODEL_PATH)
+
+
 
 # --- Logstash Helpers ---
 def send_to_logstash(payload: dict, log_type: str = "inference_event"):
