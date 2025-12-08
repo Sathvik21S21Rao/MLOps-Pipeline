@@ -55,6 +55,14 @@ spec:
 {% if container_resources is defined %}
           resources:
 {{ container_resources | to_nice_yaml | indent(12) }}
+{% else %}
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
 {% endif %}
       volumes:
         - name: model-storage
