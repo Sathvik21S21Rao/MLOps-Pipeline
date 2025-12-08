@@ -11,7 +11,7 @@ pipeline {
     DOCKER_CREDENTIALS_ID = "dockerhub-credentials"
     ANSIBLE_VAULT_CRED_ID = "ansible-vault-pass"
 
-    ANSIBLE_PYTHON_INTERPRETER = "${VENV_PATH}/bin/python"
+    ANSIBLE_PYTHON_INTERPRETER = "ansible-python"
   }
 
   stages {
