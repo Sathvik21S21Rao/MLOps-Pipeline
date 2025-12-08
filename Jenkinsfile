@@ -147,7 +147,11 @@ pipeline {
 
     stage('Deploy to Kubernetes using Ansible') {
       steps {
-        withCredentials([string(credentialsId: env.ANSIBLE_VAULT_CRED_ID, variable: 'VAULT_PASS')]) {
+        withCredentials([
+          string(credentialsId: env.ANSIBLE_VAULT_CRED_ID, variable: 'VAULT_PASS'),
+          string(credentialsId: env.VENV_PATH, variable: 'VENV_PATH'),
+          string(credentialsId: env.ANSIBLE_PYTHON_INTERPRETER, variable: 'ANSIBLE_PYTHON_INTERPRETER')
+        ]) {
           sh '''
             set -e
 
