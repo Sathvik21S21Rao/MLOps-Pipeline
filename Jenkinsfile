@@ -17,7 +17,7 @@ pipeline {
   stages {
 
     stage('Checkout Code') {
-      when { expression { return false } }  // Disable SCM checkout (you want local directory)
+      when { expression { return false } }
       steps {
         echo "Skipping SCM checkout — using local workspace"
       }
@@ -144,44 +144,45 @@ pipeline {
     }
 
     stage('Deploy to Kubernetes using Ansible') {
-  steps {
-    withCredentials([string(credentialsId: env.ANSIBLE_VAULT_CRED_ID, variable: 'VAULT_PASS')]) {
-      sh '''
-        set -e
+      steps {
+        withCredentials([string(credentialsId: env.ANSIBLE_VAULT_CRED_ID, variable: 'VAULT_PASS')]) {
+          sh '''
+            set -e
 
-        cd "$WORKSPACE"
+            cd "$WORKSPACE"
 
-        echo "==> Creating local vault file"
-        VAULT_FILE="$HOME/.ansible_vault_pass.txt"
-        printf "%s" "$VAULT_PASS" > "$VAULT_FILE"
-        chmod 600 "$VAULT_FILE"
+            echo "==> Creating local vault file"
+            VAULT_FILE="$HOME/.ansible_vault_pass.txt"
+            printf "%s" "$VAULT_PASS" > "$VAULT_FILE"
+            chmod 600 "$VAULT_FILE"
 
-        echo "==> Checking if venv exists"
-        if [ ! -d "$WORKSPACE/.venv" ]; then
-          echo "==> Creating virtual environment"
-          python3 -m venv "$WORKSPACE/.venv"
-        fi
+            echo "==> Checking if venv exists"
+            if [ ! -d "$WORKSPACE/.venv" ]; then
+              echo "==> Creating virtual environment"
+              python3 -m venv "$WORKSPACE/.venv"
+            fi
 
-        echo "==> Activating virtual environment"
-        . "$WORKSPACE/.venv/bin/activate"
+            echo "==> Activating virtual environment"
+            . "$WORKSPACE/.venv/bin/activate"
 
-        echo "==> Installing required Python packages"
-        pip install --upgrade pip
-        pip install ansible kubernetes openshift pyyaml requests
+            echo "==> Installing required Python packages"
+            pip install --upgrade pip
+            pip install ansible kubernetes openshift pyyaml requests
 
-        echo "==> Running Ansible Playbook"
-        ansible-playbook ansible/playbooks/deploy_pipeline.yml \
-          -i ansible/inventory.ini \
-          --extra-vars "k8s_namespace=${NAMESPACE}" \
-          --vault-password-file "$VAULT_FILE" \
-          -e "ansible_python_interpreter=$WORKSPACE/.venv/bin/python"
+            echo "==> Running Ansible Playbook"
+            ansible-playbook ansible/playbooks/deploy_pipeline.yml \
+              -i ansible/inventory.ini \
+              --extra-vars "k8s_namespace=${NAMESPACE}" \
+              --vault-password-file "$VAULT_FILE" \
+              -e "ansible_python_interpreter=$WORKSPACE/.venv/bin/python"
 
-        echo "==> Cleaning up vault file"
-        shred -u -z "$VAULT_FILE" || rm -f "$VAULT_FILE"
-      '''
+            echo "==> Cleaning up vault file"
+            shred -u -z "$VAULT_FILE" || rm -f "$VAULT_FILE"
+          '''
+        }
+      }
     }
   }
-}
 
   post {
     success { echo "🚀 Pipeline executed successfully!" }
