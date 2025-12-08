@@ -14,6 +14,8 @@ pipeline {
     ANSIBLE_PYTHON_INTERPRETER = "ansible-python"
   }
 
+
+
   stages {
 
     stage('Checkout Code') {
@@ -164,7 +166,7 @@ pipeline {
 
             # activate venv
             . "$VENV_PATH/bin/activate"
-            ANSIBLE_PY="$VENV_PATH/bin/python"
+            ANSIBLE_PY="${ANSIBLE_PYTHON_INTERPRETER}"
 
             pip install --quiet ansible kubernetes openshift requests pyyaml
 
