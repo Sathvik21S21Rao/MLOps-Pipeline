@@ -6,12 +6,12 @@ pipeline {
     REGISTRY = "shreyankgopal403"
     NAMESPACE = "default"
 
-    VENV_PATH = "/Users/SGBHAT/.jenkins/workspace/MLOps-Pipeline/.venv"
+    VENV_PATH = "venv-path"
 
     DOCKER_CREDENTIALS_ID = "dockerhub-credentials"
     ANSIBLE_VAULT_CRED_ID = "ansible-vault-pass"
 
-    ANSIBLE_PYTHON_INTERPRETER = "/Users/SGBHAT/.jenkins/workspace/MLOps-Pipeline/.venv/bin/python"
+    ANSIBLE_PYTHON_INTERPRETER = "${VENV_PATH}/bin/python"
   }
 
   stages {
