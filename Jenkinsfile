@@ -151,6 +151,10 @@ pipeline {
 
             # --- FIX: ensure proper kubeconfig is used ---
             export KUBECONFIG=$HOME/.kube/config
+            echo "==> Ensuring Minikube is running"
+            minikube status || minikube start --driver=docker
+
+            echo "==> Updating kube context"
             minikube update-context
 
             # vault setup
