@@ -149,34 +149,27 @@ pipeline {
           sh '''
             set -e
 
-            cd "$WORKSPACE"
+            # --- FIX: ensure proper kubeconfig is used ---
+            export KUBECONFIG=$HOME/.kube/config
+            minikube update-context
 
-            echo "==> Creating local vault file"
+            # vault setup
             VAULT_FILE="$HOME/.ansible_vault_pass.txt"
             printf "%s" "$VAULT_PASS" > "$VAULT_FILE"
             chmod 600 "$VAULT_FILE"
 
-            echo "==> Checking if venv exists"
-            if [ ! -d "$WORKSPACE/.venv" ]; then
-              echo "==> Creating virtual environment"
-              python3 -m venv "$WORKSPACE/.venv"
-            fi
+            # activate venv
+            . "$VENV_PATH/bin/activate"
+            ANSIBLE_PY="$VENV_PATH/bin/python"
 
-            echo "==> Activating virtual environment"
-            . "$WORKSPACE/.venv/bin/activate"
+            pip install --quiet ansible kubernetes openshift requests pyyaml
 
-            echo "==> Installing required Python packages"
-            pip install --upgrade pip
-            pip install ansible kubernetes openshift pyyaml requests
-
-            echo "==> Running Ansible Playbook"
             ansible-playbook ansible/playbooks/deploy_pipeline.yml \
               -i ansible/inventory.ini \
               --extra-vars "k8s_namespace=${NAMESPACE}" \
               --vault-password-file "$VAULT_FILE" \
-              -e "ansible_python_interpreter=$WORKSPACE/.venv/bin/python"
+              -e "ansible_python_interpreter=$ANSIBLE_PY"
 
-            echo "==> Cleaning up vault file"
             shred -u -z "$VAULT_FILE" || rm -f "$VAULT_FILE"
           '''
         }
