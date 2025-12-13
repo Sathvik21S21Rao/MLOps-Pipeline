@@ -158,7 +158,13 @@ pipeline {
             # --- FIX: ensure proper kubeconfig is used ---
             export KUBECONFIG=$HOME/.kube/config
             echo "==> Ensuring Minikube is running"
-            minikube status || minikube start --driver=docker
+            echo "==> Checking Minikube status"
+            if ! minikube status >/dev/null 2>&1; then
+              echo "==> Minikube not running. Starting..."
+              minikube start --driver=docker
+            else
+              echo "==> Minikube already running"
+            fi
 
             echo "==> Updating kube context"
             minikube update-context
@@ -191,4 +197,5 @@ pipeline {
     success { echo "🚀 Pipeline executed successfully!" }
     failure { echo "❌ Pipeline failed. Check logs." }
   }
+
 }
